@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 
+using namespace std;
 using namespace Eigen;
 
 // Domain bounds
@@ -21,7 +22,7 @@ using namespace Eigen;
 #define DOMAIN_YMIN 0.0
 #define DOMAIN_YMAX 300.0
 #define NUM_AGENTS 3
-#define NSTEPS 3
+#define NSTEPS 5000
 #define DT 0.1
 
 int main(void) {
@@ -39,7 +40,7 @@ int main(void) {
     Vector3d y;
     y << 50, 75, 250;
     Vector3d thetas;
-    thetas << M_PI, M_PI, M_PI;
+    thetas << M_PI/4, M_PI/4, M_PI/4;
 
     // Agents params: Velocity Bounds, number of agents...
 
@@ -63,25 +64,45 @@ int main(void) {
     int Nky = 50;
     MatrixXd KX = (VectorXd::LinSpaced(Nkx, 0, Nkx-1)) * RowVectorXd::Ones(Nky);   // Nkx x 1
     MatrixXd KY = VectorXd::Ones(Nky) * RowVectorXd::LinSpaced(Nky, 0, Nky-1);  // Nky x 1
-    MatrixXd LK = (((KX.array().square() + KY.array().square() + 1.0).array()).pow(s)).matrix().inverse();
-
+    MatrixXd LK = (((KX.array().square() + KY.array().square() + 1.0)).pow(s)).inverse().matrix();
+    
+    std::ofstream outfile5;
+    outfile5.open("KXKYLK.txt");
+    outfile5 << "KX is: "<< std::endl;
+    outfile5 << KX << std::endl;
+    outfile5 << "KY is: "<< std::endl;
+    outfile5 << KY << std::endl;
+    outfile5 << "LK is: "<< std::endl;
+    outfile5 << LK << std::endl;
+    outfile5.close();
+    
+    std::cout << "KX is " << KX << std::endl;
+     std::cout << "KY is " << KY << std::endl;
+      std::cout << "LK is " << LK << std::endl;
     /********* Initialization ends *************/
     std::cout << "Initialization complete" << std::endl;
-
+    std::cout << "Utility map generation starts" << std::endl;
     int add_noise = 0;
     double xdel = 1;    // Resolution of x and y 
     double ydel = 1;
 
     MatrixXd mu = generate_utility_map(DOMAIN_XMIN, DOMAIN_XMAX, xdel, DOMAIN_YMIN, DOMAIN_YMAX, ydel, add_noise);
-    
+
     std::ofstream outfile;
+    outfile.open("mu.txt");
+    outfile << "mu is: "<< std::endl;
+    outfile << mu << std::endl;
+    outfile.close();
+    
 
     // Normalize information distribution
     mu = mu / mu.sum();
-    /*outfile.open("mu.txt");
-    outfile << "normalized mu is: "<< std::endl;
-    outfile << mu << std::endl;
-    outfile.close();*/
+    std::ofstream outfile2;
+    outfile2.open("mu_normalized.txt");
+    outfile2 << "mu_normalized is: "<< std::endl;
+    outfile2 << mu << std::endl;
+    outfile2.close();
+
     MatrixXd X = RowVectorXd::LinSpaced(mu.cols(), DOMAIN_XMIN, DOMAIN_XMAX).replicate(mu.rows(),1);
     MatrixXd Y = VectorXd::LinSpaced(mu.rows(), DOMAIN_YMIN, DOMAIN_YMAX).replicate(1,mu.cols());
 
@@ -132,17 +153,33 @@ int main(void) {
     erg.HK = fourier_coeff->HK;
     erg.muk = fourier_coeff->muk;
 
-
     // Hadi said "alway start from 0"
     for (int n = 0; n < NSTEPS; n++) {
         double time = n * DT;
         SMCUpdateReturn *smc_result = smc_update(pose, opt, domain_bounds, erg, Ck, time, DT);
+        /*std::cout << "result x: " << smc_result->x << std::endl;
+        std::cout << "result y: " << smc_result->y << std::endl;
+        std::cout << "result theta: " << smc_result->theta << std::endl;*/
         for (int iagent = 0; iagent < NUM_AGENTS; iagent++) {
             (positions[0])(n, iagent) = (smc_result->x)(iagent);
             (positions[1])(n, iagent) = (smc_result->y)(iagent);
+            (positions[2])(n, iagent) = (smc_result->theta)(iagent);
         }
+        pose.x = smc_result->x;
+        pose.y = smc_result->y;
+        pose.theta = smc_result->theta;
         ergodicity_metric(n) = calculate_ergodicity(Ck, LK, fourier_coeff->muk);
     }
     
+    std::ofstream outfile3;
+    outfile3.open("agent_trajectory.txt");
+    outfile3 << "Number of agent: "<< NUM_AGENTS << std::endl;
+    outfile3 << "x information:" << std::endl;
+    outfile3 << positions[0] << std::endl;
+    outfile3 << "y information:" << std::endl;
+    outfile3 << positions[1] << std::endl;
+    outfile3 << "theta information:" << std::endl;
+    outfile3 << positions[2] << std::endl;
+    outfile3.close();
     return 0;
 }

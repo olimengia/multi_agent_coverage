@@ -42,8 +42,8 @@ SMCUpdateReturn *smc_update(Pose &pose, OPT &opt, DomainBounds &domain_bounds, E
 		
 		double Bjy = ((erg.LK).cwiseQuotient((erg.HK).transpose()).cwiseProduct(const3).cwiseProduct(temp3).cwiseProduct(temp4)).sum();
 
-		double gamma_v = Bjy*cos(pose.theta(iagent)) + Bjy*sin(pose.theta(iagent));
-		double gamma_w = -Bjy*sin(pose.theta(iagent)) + Bjy*cos(pose.theta(iagent));
+		double gamma_v = Bjx*cos(pose.theta(iagent)) + Bjy*sin(pose.theta(iagent));
+		double gamma_w = -Bjx*sin(pose.theta(iagent)) + Bjy*cos(pose.theta(iagent));
 
 		// Updating agent location based on SMC feedback control law
 		double v;
