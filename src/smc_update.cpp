@@ -17,7 +17,7 @@ SMCUpdateReturn *smc_update(Pose &pose, OPT &opt, DomainBounds &domain_bounds, E
 		yrel_vec(iagent) = yrel;
 
 		MatrixXd temp1 = erg.KX.array().cos().matrix()*const1 * xrel;
-		MatrixXd temp2 = erg.KY.array().cos().matrix()*const1 * yrel;
+		MatrixXd temp2 = erg.KY.array().cos().matrix()*const2 * yrel;
 		Ck = Ck + (temp1.cwiseProduct(temp2) * dt).cwiseQuotient(erg.HK.transpose());
 	}
 
@@ -31,7 +31,8 @@ SMCUpdateReturn *smc_update(Pose &pose, OPT &opt, DomainBounds &domain_bounds, E
 	result->x = VectorXd::Zero(opt.nagents);
 	result->y = VectorXd::Zero(opt.nagents);
 	result->theta = VectorXd::Zero(opt.nagents);
-	
+	result->Ck = Ck;
+
 	for (int iagent = 0; iagent < opt.nagents; iagent++) {
 		MatrixXd temp1 = const4.cwiseProduct((const6 * xrel_vec(iagent)).array().sin().matrix());
 		MatrixXd temp2 = (const7 * yrel_vec(iagent)).array().cos().matrix();
@@ -39,7 +40,6 @@ SMCUpdateReturn *smc_update(Pose &pose, OPT &opt, DomainBounds &domain_bounds, E
 
 		MatrixXd temp3 = const5.cwiseProduct((const6 * xrel_vec(iagent)).array().cos().matrix());
 		MatrixXd temp4 = (const7 * yrel_vec(iagent)).array().sin().matrix();
-		
 		double Bjy = ((erg.LK).cwiseQuotient((erg.HK).transpose()).cwiseProduct(const3).cwiseProduct(temp3).cwiseProduct(temp4)).sum();
 
 		double gamma_v = Bjx*cos(pose.theta(iagent)) + Bjy*sin(pose.theta(iagent));

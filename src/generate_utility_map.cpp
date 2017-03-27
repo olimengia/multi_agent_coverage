@@ -4,14 +4,14 @@
 #include <math.h>
 
 
-MatrixXd mvnpdf(int rows, double x_interval, int cols, double y_interval, Vector2d &mean, Matrix2d &covar) {
+MatrixXd mvnpdf(int cols, double x_interval, int rows, double y_interval, Vector2d &mean, Matrix2d &covar) {
 	MatrixXd result(rows, cols);
 
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
 			Vector2d loc;
 			//std::cout << "mean: " << mean << std::endl;
-			loc << i * x_interval, j * y_interval;
+			loc << i * y_interval, j * x_interval;
 			//std::cout << "loc: " << loc << std::endl;
 			//std::cout << "covar: " << covar << std::endl;
 
@@ -35,7 +35,7 @@ MatrixXd generate_utility_map(double xmin, double xmax, double xdel, double ymin
 	int x_range = (int)((xmax-xdel-xmin)/xdel + 1);
 	int y_range = (int)((ymax-ydel-ymin)/ydel + 1);
 
-	int n;
+	double n;
 	if (addnoise)
 		n = .05;
 	else

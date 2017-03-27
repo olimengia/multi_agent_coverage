@@ -12,6 +12,7 @@
 #include <math.h>
 #include <iostream>
 #include <fstream>
+#include <ctime>
 
 using namespace std;
 using namespace Eigen;
@@ -23,7 +24,7 @@ using namespace Eigen;
 #define DOMAIN_YMAX 300.0
 #define NUM_AGENTS 3
 #define NSTEPS 5000
-#define DT 0.1
+#define DT 0.1 //simulation time step
 
 int main(void) {
 
@@ -75,10 +76,10 @@ int main(void) {
     outfile5 << "LK is: "<< std::endl;
     outfile5 << LK << std::endl;
     outfile5.close();
-    
+    /*
     std::cout << "KX is " << KX << std::endl;
      std::cout << "KY is " << KY << std::endl;
-      std::cout << "LK is " << LK << std::endl;
+      std::cout << "LK is " << LK << std::endl;*/
     /********* Initialization ends *************/
     std::cout << "Initialization complete" << std::endl;
     std::cout << "Utility map generation starts" << std::endl;
@@ -152,7 +153,9 @@ int main(void) {
     erg.LK = LK;
     erg.HK = fourier_coeff->HK;
     erg.muk = fourier_coeff->muk;
-
+    
+    time_t tstart, tend;// for timing the forloop
+    tstart = time(0);
     // Hadi said "alway start from 0"
     for (int n = 0; n < NSTEPS; n++) {
         double time = n * DT;
@@ -168,9 +171,12 @@ int main(void) {
         pose.x = smc_result->x;
         pose.y = smc_result->y;
         pose.theta = smc_result->theta;
+        Ck = smc_result->Ck;
         ergodicity_metric(n) = calculate_ergodicity(Ck, LK, fourier_coeff->muk);
     }
-    
+    tend = time(0); 
+    cout << "Simulation time: "<< difftime(tend, tstart) << " seconds!" <<endl;
+
     std::ofstream outfile3;
     outfile3.open("agent_trajectory.txt");
     outfile3 << "Number of agent: "<< NUM_AGENTS << std::endl;

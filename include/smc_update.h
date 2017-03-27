@@ -10,6 +10,7 @@ struct SMCUpdateReturn {
 	VectorXd x;
 	VectorXd y;
 	VectorXd theta;
+	MatrixXd Ck;
 };
 
 SMCUpdateReturn *smc_update(Pose &pose, OPT &opt, DomainBounds &domain_bounds, ERG &erg, MatrixXd &Ck, double time, double dt);
